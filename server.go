@@ -9,12 +9,6 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 )
 
-func helloHandler(c echo.Context) error {
-	return c.JSON(http.StatusOK, map[string]string{
-		"message": "hello puttasiri",
-	})
-}
-
 type Todo struct {
 	ID     int    `json:"id"` //ขึ้นต้นด้วยตัวพิมพ์ใหญ่เท่านั้น
 	Title  string `json:"title"`
@@ -25,13 +19,33 @@ var todos = map[int]*Todo{
 	1: &Todo{ID: 1, Title: "pay phone bills", Status: "Active"},
 }
 
-func getTodosHandler(c echo.Context) error {
+func helloHandler(c echo.Context) error {
+	return c.JSON(http.StatusOK, map[string]string{
+		"message": "hello puttasiri",
+	})
+}
+
+func getTodosHandler(c echo.Context) error { //เปลี่ยน data เป็น ่json
 	items := []*Todo{}
 	for _, item := range todos {
 		items = append(items, item)
 	}
 	return c.JSON(http.StatusOK, items)
 }
+
+func createTodosHandler(e echo.Context) error {
+	t := Todo{}
+	if err := e.Bind(&t); err != nil {
+		return e.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	id := len(todos)
+	id++
+	t.ID = id
+	todos[t.ID] = &t
+	return e.JSON(http.StatusCreated, "created todo.")
+}
+
 func main() {
 	e := echo.New()
 
@@ -41,6 +55,8 @@ func main() {
 	//e.Start(":1323")
 
 	e.GET("/todos", getTodosHandler)
+
+	e.POST("/todos", createTodosHandler)
 
 	port := os.Getenv("PORT")
 	log.Println("Port:", port)
