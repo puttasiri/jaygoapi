@@ -46,6 +46,20 @@ func createTodosHandler(e echo.Context) error {
 	return e.JSON(http.StatusCreated, "created todo.")
 }
 
+func getTodoByIdHandler(c echo.Context) error {
+	var id int
+	err := echo.PathParamsBinder(c).Int("id", &id).BindError()
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, err)
+	}
+
+	t, ok := todos[id]
+	if !ok {
+		return c.JSON(http.StatusOK, map[int]string{})
+	}
+	return c.JSON(http.StatusOK, t)
+}
+
 func main() {
 	e := echo.New()
 
@@ -57,6 +71,8 @@ func main() {
 	e.GET("/todos", getTodosHandler)
 
 	e.POST("/todos", createTodosHandler)
+
+	e.GET("/todos/:id", getTodoByIdHandler)
 
 	port := os.Getenv("PORT")
 	log.Println("Port:", port)
