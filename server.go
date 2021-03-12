@@ -59,7 +59,44 @@ func getTodoByIdHandler(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, t)
 }
+func updateTodosHandler(c echo.Context) error {
+	var id int
+	err := echo.PathParamsBinder(c).Int("id", &id).BindError()
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, err)
+	}
+	t := todos[id]
+	if err := c.Bind(t); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+	return c.JSON(http.StatusOK, t)
+	// var id int
+	// err := echo.PathParamsBinder(e).Int("id", &id).BindError()
+	// if err != nil {
+	// 	return e.JSON(http.StatusBadRequest, err)
+	// }
 
+	// t := Todo{}
+	// if err := e.Bind(&t); err != nil {
+	// 	return e.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	// }
+
+	// id := len(todos)
+	// id++
+	// t.ID = id
+	// todos[t.ID] = &t
+	// return c.JSON(http.StatusOK, "updated todo.")
+}
+
+func deleteTodosHandler(c echo.Context) error {
+	var id int
+	err := echo.PathParamsBinder(c).Int("id", &id).BindError()
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, err)
+	}
+	delete(todos, id)
+	return c.JSON(http.StatusOK, "deleted todo.")
+}
 func main() {
 	e := echo.New()
 
@@ -72,7 +109,13 @@ func main() {
 
 	e.POST("/todos", createTodosHandler)
 
+	//insert
 	e.GET("/todos/:id", getTodoByIdHandler)
+
+	//update PUT
+	e.PUT("/todos/:id", updateTodosHandler)
+	//delete DELETE
+	e.DELETE("/todos/:id", deleteTodosHandler)
 
 	port := os.Getenv("PORT")
 	log.Println("Port:", port)
