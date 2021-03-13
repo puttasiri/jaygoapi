@@ -38,7 +38,7 @@ func main() {
 	e.POST("/todos", todo.CreateTodosHandler)
 
 	//select by id
-	e.GET("/todos/:id", todo.GetTodoByIdHandler2)
+	e.GET("/todos/:id", todo.GetTodoByIdHandler)
 
 	//update PUT
 	e.PUT("/todos/:id", todo.UpdateTodosHandler)

@@ -46,19 +46,19 @@ func CreateTodosHandler(e echo.Context) error {
 	return e.JSON(http.StatusCreated, "created todo.")
 }
 
-func GetTodoByIdHandler(c echo.Context) error {
-	var id int
-	err := echo.PathParamsBinder(c).Int("id", &id).BindError()
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, err)
-	}
+// func GetTodoByIdHandler(c echo.Context) error {
+// 	var id int
+// 	err := echo.PathParamsBinder(c).Int("id", &id).BindError()
+// 	if err != nil {
+// 		return c.JSON(http.StatusBadRequest, err)
+// 	}
 
-	t, ok := todos[id]
-	if !ok {
-		return c.JSON(http.StatusOK, map[int]string{})
-	}
-	return c.JSON(http.StatusOK, t)
-}
+// 	t, ok := todos[id]
+// 	if !ok {
+// 		return c.JSON(http.StatusOK, map[int]string{})
+// 	}
+// 	return c.JSON(http.StatusOK, t)
+// }
 func UpdateTodosHandler(c echo.Context) error {
 	var id int
 	err := echo.PathParamsBinder(c).Int("id", &id).BindError()
@@ -98,7 +98,7 @@ func DeleteTodosHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, "deleted todo.")
 }
 
-func GetTodoByIdHandler2(c echo.Context) error {
+func GetTodoByIdHandler(c echo.Context) error {
 	var id int
 	err := echo.PathParamsBinder(c).Int("id", &id).BindError()
 	if err != nil {
