@@ -156,7 +156,7 @@ func GetTodosHandler(c echo.Context) error { //เปลี่ยน data เป
 	}
 	defer db.Close()
 
-	stmt, err := db.Prepare("SELECT id, title, status FROM todos Where status='active'")
+	stmt, err := db.Prepare("SELECT id, title, status FROM todos")
 	if err != nil {
 		log.Fatal("can't prepare query all todos statment", err)
 	}
