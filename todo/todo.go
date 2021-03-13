@@ -2,6 +2,7 @@ package todo
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -34,18 +35,18 @@ func HelloHandler(c echo.Context) error {
 // 	return c.JSON(http.StatusOK, items)
 // }
 
-func CreateTodosHandler(e echo.Context) error {
-	t := Todo{}
-	if err := e.Bind(&t); err != nil {
-		return e.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
-	}
+// func CreateTodosHandler(e echo.Context) error {
+// 	t := Todo{}
+// 	if err := e.Bind(&t); err != nil {
+// 		return e.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+// 	}
 
-	id := len(todos)
-	id++
-	t.ID = id
-	todos[t.ID] = &t
-	return e.JSON(http.StatusCreated, "created todo.")
-}
+// 	id := len(todos)
+// 	id++
+// 	t.ID = id
+// 	todos[t.ID] = &t
+// 	return e.JSON(http.StatusCreated, "created todo.")
+// }
 
 // func GetTodoByIdHandler(c echo.Context) error {
 // 	var id int
@@ -71,22 +72,7 @@ func UpdateTodosHandler(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 	return c.JSON(http.StatusOK, t)
-	// var id int
-	// err := echo.PathParamsBinder(e).Int("id", &id).BindError()
-	// if err != nil {
-	// 	return e.JSON(http.StatusBadRequest, err)
-	// }
 
-	// t := Todo{}
-	// if err := e.Bind(&t); err != nil {
-	// 	return e.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
-	// }
-
-	// id := len(todos)
-	// id++
-	// t.ID = id
-	// todos[t.ID] = &t
-	// return c.JSON(http.StatusOK, "updated todo.")
 }
 
 func DeleteTodosHandler(c echo.Context) error {
@@ -182,4 +168,27 @@ func GetTodosHandler(c echo.Context) error { //เปลี่ยน data เป
 	}
 
 	return c.JSON(http.StatusOK, items)
+}
+func CreateTodosHandler(e echo.Context) error {
+	t := Todo{}
+	if err := e.Bind(&t); err != nil {
+		return e.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	db, err := sql.Open("postgres", os.Getenv("DATABASE_URL"))
+	if err != nil {
+		log.Fatal("Connect to database error", err)
+	}
+	defer db.Close()
+
+	row := db.QueryRow("INSERT INTO todos (title, status) values ($1, $2)  RETURNING id", t.Title, t.Status) //Insert 1 row only
+	var id int
+	err = row.Scan(&id) // Check Error
+	if err != nil {
+		fmt.Println("can't scan id", err)
+		return e.JSON(http.StatusBadRequest, "Error todo.")
+	}
+
+	return e.JSON(http.StatusCreated, "created todo.")
+
 }
