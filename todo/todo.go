@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/labstack/echo/v4"
+	_ "github.com/lib/pq"
 )
 
 type Todo struct {
