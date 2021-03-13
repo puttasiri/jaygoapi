@@ -193,14 +193,14 @@ func CreateTodosHandler(e echo.Context) error {
 
 }
 func UpdateTodosHandler(c echo.Context) error {
-	var id int
-	err := echo.PathParamsBinder(c).Int("id", &id).BindError()
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, err)
-	}
-	t := todos[id]
-	if err := c.Bind(t); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	// var id int
+	// err := echo.PathParamsBinder(c).Int("id", &id).BindError()
+	// if err != nil {
+	// 	return c.JSON(http.StatusBadRequest, err)
+	// }
+	t := Todo{}
+	if err := c.Bind(&t); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"errorx": err.Error()})
 	}
 
 	db, err := sql.Open("postgres", os.Getenv("DATABASE_URL"))
@@ -215,10 +215,10 @@ func UpdateTodosHandler(c echo.Context) error {
 		log.Fatal("can't prepare statment update", err)
 	}
 
-	if _, err := stmt.Exec(t.ID, "inactive"); err != nil { //Exec( [id ตาม where] , [ข้อความที่เปลี่ยน])
+	if _, err := stmt.Exec(t.ID, t.Status); err != nil { //Exec( [id ตาม where] , [ข้อความที่เปลี่ยน])
 		log.Fatal("error execute update ", err)
 	}
 
-	return c.JSON(http.StatusOK, t)
+	return c.JSON(http.StatusOK, t.ID)
 
 }
