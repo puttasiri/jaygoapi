@@ -26,13 +26,13 @@ func HelloHandler(c echo.Context) error {
 	})
 }
 
-func GetTodosHandler(c echo.Context) error { //เปลี่ยน data เป็น ่json
-	items := []*Todo{}
-	for _, item := range todos {
-		items = append(items, item)
-	}
-	return c.JSON(http.StatusOK, items)
-}
+// func GetTodosHandler(c echo.Context) error { //เปลี่ยน data เป็น ่json
+// 	items := []*Todo{}
+// 	for _, item := range todos {
+// 		items = append(items, item)
+// 	}
+// 	return c.JSON(http.StatusOK, items)
+// }
 
 func CreateTodosHandler(e echo.Context) error {
 	t := Todo{}
@@ -145,4 +145,41 @@ func GetTodoByIdHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, t)
 
 	//fmt.Println("one row", id, title, status)
+}
+
+func GetTodosHandler(c echo.Context) error { //เปลี่ยน data เป็น ่json
+	items := []*Todo{}
+
+	db, err := sql.Open("postgres", os.Getenv("DATABASE_URL"))
+	if err != nil {
+		log.Fatal("Connect to database error", err)
+	}
+	defer db.Close()
+
+	stmt, err := db.Prepare("SELECT id, title, status FROM todos Where status='active'")
+	if err != nil {
+		log.Fatal("can't prepare query all todos statment", err)
+	}
+
+	rows, err := stmt.Query()
+	if err != nil {
+		log.Fatal("can't query all todos", err)
+	}
+	for rows.Next() {
+		var id int
+		var title, status string
+		err := rows.Scan(&id, &title, &status)
+		if err != nil {
+			log.Fatal("can't Scan row into variable", err)
+		}
+		//fmt.Println(id, title, status)
+		t := &Todo{
+			ID:     id,
+			Title:  title,
+			Status: status,
+		}
+		items = append(items, t)
+	}
+
+	return c.JSON(http.StatusOK, items)
 }
