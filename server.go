@@ -5,117 +5,45 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/puttasiri/jaygoapi/todo"
+
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
 
-type Todo struct {
-	ID     int    `json:"id"` //ขึ้นต้นด้วยตัวพิมพ์ใหญ่เท่านั้น
-	Title  string `json:"title"`
-	Status string `json:"status"`
-}
-
-var todos = map[int]*Todo{
-	1: &Todo{ID: 1, Title: "pay phone bills", Status: "Active"},
-}
-
-func helloHandler(c echo.Context) error {
-	return c.JSON(http.StatusOK, map[string]string{
-		"message": "hello puttasiri",
-	})
-}
-
-func getTodosHandler(c echo.Context) error { //เปลี่ยน data เป็น ่json
-	items := []*Todo{}
-	for _, item := range todos {
-		items = append(items, item)
+func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		log.Println("start middleware : check authentication")
+		token := c.Request().Header.Get("Authorization")
+		if token != "ABC" {
+			return c.JSON(http.StatusUnauthorized, map[string]string{"message": "Unauthorized"})
+		}
+		return next(c)
 	}
-	return c.JSON(http.StatusOK, items)
 }
 
-func createTodosHandler(e echo.Context) error {
-	t := Todo{}
-	if err := e.Bind(&t); err != nil {
-		return e.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
-	}
-
-	id := len(todos)
-	id++
-	t.ID = id
-	todos[t.ID] = &t
-	return e.JSON(http.StatusCreated, "created todo.")
-}
-
-func getTodoByIdHandler(c echo.Context) error {
-	var id int
-	err := echo.PathParamsBinder(c).Int("id", &id).BindError()
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, err)
-	}
-
-	t, ok := todos[id]
-	if !ok {
-		return c.JSON(http.StatusOK, map[int]string{})
-	}
-	return c.JSON(http.StatusOK, t)
-}
-func updateTodosHandler(c echo.Context) error {
-	var id int
-	err := echo.PathParamsBinder(c).Int("id", &id).BindError()
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, err)
-	}
-	t := todos[id]
-	if err := c.Bind(t); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
-	}
-	return c.JSON(http.StatusOK, t)
-	// var id int
-	// err := echo.PathParamsBinder(e).Int("id", &id).BindError()
-	// if err != nil {
-	// 	return e.JSON(http.StatusBadRequest, err)
-	// }
-
-	// t := Todo{}
-	// if err := e.Bind(&t); err != nil {
-	// 	return e.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
-	// }
-
-	// id := len(todos)
-	// id++
-	// t.ID = id
-	// todos[t.ID] = &t
-	// return c.JSON(http.StatusOK, "updated todo.")
-}
-
-func deleteTodosHandler(c echo.Context) error {
-	var id int
-	err := echo.PathParamsBinder(c).Int("id", &id).BindError()
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, err)
-	}
-	delete(todos, id)
-	return c.JSON(http.StatusOK, "deleted todo.")
-}
 func main() {
 	e := echo.New()
 
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
-	e.GET("/hello", helloHandler)
+	e.Use(authMiddleware)
+
+	e.GET("/hello", todo.HelloHandler)
 	//e.Start(":1323")
 
-	e.GET("/todos", getTodosHandler)
-
-	e.POST("/todos", createTodosHandler)
+	e.GET("/todos", todo.GetTodosHandler)
 
 	//insert
-	e.GET("/todos/:id", getTodoByIdHandler)
+	e.POST("/todos", todo.CreateTodosHandler)
+
+	//select by id
+	e.GET("/todos/:id", todo.GetTodoByIdHandler2)
 
 	//update PUT
-	e.PUT("/todos/:id", updateTodosHandler)
+	e.PUT("/todos/:id", todo.UpdateTodosHandler)
 	//delete DELETE
-	e.DELETE("/todos/:id", deleteTodosHandler)
+	e.DELETE("/todos/:id", todo.DeleteTodosHandler)
 
 	port := os.Getenv("PORT")
 	log.Println("Port:", port)
