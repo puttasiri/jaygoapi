@@ -99,6 +99,11 @@ func DeleteTodosHandler(c echo.Context) error {
 }
 
 func GetTodoByIdHandler2(c echo.Context) error {
+	var id int
+	err := echo.PathParamsBinder(c).Int("id", &id).BindError()
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, err)
+	}
 
 	db, err := sql.Open("postgres", os.Getenv("DATABASE_URL"))
 	if err != nil {
@@ -111,26 +116,31 @@ func GetTodoByIdHandler2(c echo.Context) error {
 		log.Fatal("can'tprepare query one row statment", err)
 	}
 
-	rowId := 1
+	rowId := id
 	row := stmt.QueryRow(rowId)
-	var id int
+	//var id int
 	var title, status string
 
 	err = row.Scan(&id, &title, &status)
 	if err != nil {
 		log.Fatal("can't Scan row into variables", err)
 	}
+	//================================
+	//
+	// Todo struct {
+	// 	ID     int    `json:"id"` //ขึ้นต้นด้วยตัวพิมพ์ใหญ่เท่านั้น
+	// 	Title  string `json:"title"`
+	// 	Status string `json:"status"`
+	// }
 
-	//var id int
-	err = echo.PathParamsBinder(c).Int("id", &id).BindError()
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, err)
+	t := &Todo{
+		ID:     id,
+		Title:  title,
+		Status: status,
 	}
-
-	t, ok := todos[id]
-	if !ok {
-		return c.JSON(http.StatusOK, map[int]string{})
-	}
+	// if !ok {
+	// 	return c.JSON(http.StatusOK, map[int]string{})
+	// }
 	return c.JSON(http.StatusOK, t)
 
 	//fmt.Println("one row", id, title, status)
