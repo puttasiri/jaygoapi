@@ -61,19 +61,19 @@ func HelloHandler(c echo.Context) error {
 // 	}
 // 	return c.JSON(http.StatusOK, t)
 // }
-func UpdateTodosHandler(c echo.Context) error {
-	var id int
-	err := echo.PathParamsBinder(c).Int("id", &id).BindError()
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, err)
-	}
-	t := todos[id]
-	if err := c.Bind(t); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
-	}
-	return c.JSON(http.StatusOK, t)
+// func UpdateTodosHandler(c echo.Context) error {
+// 	var id int
+// 	err := echo.PathParamsBinder(c).Int("id", &id).BindError()
+// 	if err != nil {
+// 		return c.JSON(http.StatusBadRequest, err)
+// 	}
+// 	t := todos[id]
+// 	if err := c.Bind(t); err != nil {
+// 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+// 	}
+// 	return c.JSON(http.StatusOK, t)
 
-}
+// }
 
 func DeleteTodosHandler(c echo.Context) error {
 	var id int
@@ -190,5 +190,35 @@ func CreateTodosHandler(e echo.Context) error {
 	}
 
 	return e.JSON(http.StatusCreated, "created todo.")
+
+}
+func UpdateTodosHandler(c echo.Context) error {
+	var id int
+	err := echo.PathParamsBinder(c).Int("id", &id).BindError()
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, err)
+	}
+	t := todos[id]
+	if err := c.Bind(t); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	db, err := sql.Open("postgres", os.Getenv("DATABASE_URL"))
+	if err != nil {
+		log.Fatal("Connect to database error", err)
+	}
+	defer db.Close()
+
+	stmt, err := db.Prepare("UPDATE todos SET status=$2 WHERE id=$1;")
+
+	if err != nil {
+		log.Fatal("can't prepare statment update", err)
+	}
+
+	if _, err := stmt.Exec(t.ID, "inactive"); err != nil { //Exec( [id ตาม where] , [ข้อความที่เปลี่ยน])
+		log.Fatal("error execute update ", err)
+	}
+
+	return c.JSON(http.StatusOK, t)
 
 }
